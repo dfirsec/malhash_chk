@@ -13,3 +13,6 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+```
+$ python malhash_chk.py 2912436972921dc7741ae700f2008827
+```
