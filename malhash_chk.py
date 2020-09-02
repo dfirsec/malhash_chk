@@ -11,7 +11,7 @@ import requests
 from colorama import Back, Fore, Style
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "0.1"
+__version__ = "0.0.1"
 __description__ = "Query hash against malware hash repos."
 
 colorama.init()
@@ -50,6 +50,7 @@ headers = {'User-Agent': random.choice(user_agent_list)}
 
 def malbazaar(hash_str):
     url = 'https://mb-api.abuse.ch/api/v1/'
+    malb_txt = f"{Style.BRIGHT}MalBazaar{Style.RESET_ALL}"
     data = {
         'query': 'get_info',
         'hash': hash_str
@@ -57,9 +58,9 @@ def malbazaar(hash_str):
     try:
         resp = requests.post(url, data=data, headers=headers).json()
         if resp['query_status'] == 'hash_not_found':
-            print(f"{Fore.GREEN}[x]{Fore.RESET} MalBazaar: Hash not found")
+            print(f"{Fore.GREEN}[x]{Fore.RESET} {malb_txt}: Hash not found")
         else:
-            print(f"{Fore.RED}[+]{Fore.RESET} MalBazaar: Hash found")
+            print(f"{Fore.RED}[+]{Fore.RESET} {malb_txt}: Hash found")
             if resp['data']:
                 for v in resp['data']:
                     for k, i in v.items():
@@ -71,14 +72,15 @@ def malbazaar(hash_str):
 
 def malshare(hash_str):
     url = 'https://malshare.com/daily/malshare.current.all.txt'
+    mals_txt = f"{Style.BRIGHT}Malshare{Style.RESET_ALL}"
     try:
         resp = requests.get(url, headers=headers)
         if resp.status_code == 200:
             match = re.findall(hash_str, resp.text)
             if match:
-                print(f"{Fore.RED}[+]{Fore.RESET} Malshare: Hash found")
+                print(f"{Fore.RED}[+]{Fore.RESET} {mals_txt}: Hash found") #nopep8
             else:
-                print(f"{Fore.GREEN}[x]{Fore.RESET} Malshare: Hash not found")
+                print(f"{Fore.GREEN}[x]{Fore.RESET} {mals_txt}: Hash not found") #nopep8
     except Exception as e:
         print(e)
 
@@ -87,7 +89,7 @@ def mhr(hash_str):
     resolver = dns.resolver.Resolver()
     resolver.timeout = 1
     resolver.lifetime = 1
-
+    mhr_txt = f"{Style.BRIGHT}MHR{Style.RESET_ALL}"
     try:
 
         for rdata in resolver.resolve(f'{hash_str}.malware.hash.cymru.com', 'TXT'):
@@ -96,14 +98,14 @@ def mhr(hash_str):
             last_seen = datetime.datetime.fromtimestamp(
                 int(unix_time)).strftime('%Y-%m-%d %H:%M:%S')
             if last_seen:
-                print(f"{Fore.RED}[+]{Fore.RESET} MHR: Hash found")
+                print(f"{Fore.RED}[+]{Fore.RESET} {mhr_txt}: Hash found")  # nopep8
                 print(f"{'Last Seen':17}: {last_seen}\n{'Detection by A/V':17}: {detection}%")  # nopep8
     except dns.exception.Timeout:
         print("Timeout error")
     except dns.name.LabelTooLong:
-        print(f"{Fore.YELLOW}[-]{Fore.RESET} MHR: Please use MD5 hash")
+        print(f"{Fore.YELLOW}[-]{Fore.RESET} {mhr_txt}: Use MD5 hash")  # nopep8
     except dns.resolver.NXDOMAIN:
-        print(f"{Fore.GREEN}[x]{Fore.RESET} MHR: Hash not found")
+        print(f"{Fore.GREEN}[x]{Fore.RESET} {mhr_txt}: Hash not found")  # nopep8
 
 
 def main():
@@ -112,7 +114,7 @@ def main():
     else:
         sys.exit("Usage: python malhash_chk.py <hash>")
 
-    print("Querying...")
+    print(f"{Fore.YELLOW}Querying...{Fore.RESET}")
     malbazaar(hash_str)
     malshare(hash_str)
     mhr(hash_str)
