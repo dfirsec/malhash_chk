@@ -16,3 +16,4 @@ pip install -r requirements.txt
 ```
 $ python malhash_chk.py 2912436972921dc7741ae700f2008827
 ```
+![](malhash_chk_run.png?raw=true)
