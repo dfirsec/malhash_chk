@@ -2,50 +2,53 @@ import datetime
 import re
 import sys
 
-import colorama
 import dns.resolver
 import requests
-from colorama import Fore, Style
+from colorama import Fore, Style, init
+from requests.structures import CaseInsensitiveDict
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.0.1"
+__version__ = "v0.0.3"
 __description__ = "Query hash against malware hash repos."
 
 # Intialize colorama
-colorama.init()
+init()
+
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"}
 
 
 def shadow_srv(hash_str):
     url = f"https://api.shadowserver.org/malware/info?sample={hash_str}"
-    ss_txt = f"{Style.BRIGHT}ShadowServer{Style.RESET_ALL}"
+    title = f"{Style.BRIGHT}ShadowServer{Style.RESET_ALL}"
     try:
         resp = requests.get(url, headers=headers).json()
     except Exception as e:
         print(e)
     else:
         if resp:
-            print(f"{Fore.RED}[+]{Fore.RESET} {ss_txt}: Hash found")
+            print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
             for data in resp:
-                if not data["anti_virus"] and data['adobe_malware_classifier']:
+                if not data["anti_virus"] and data["adobe_malware_classifier"]:
                     print(f"\t{'Classifier':10} : {data['adobe_malware_classifier']}")
                     print(f"\t{'MD5':10} : {data['md5']}")
                     print(f"\t{'First Seen':10} : {data['first_seen']}")
                     print(f"\t{'Last Seen':10} : {data['last_seen']}")
                     print(f"\t{'Type':10} : {data['type']}")
                 for av in data["anti_virus"]:
-                    print(av["vendor"])
-                    print(av["signature"])
-                    print(av["md5"])
-                    print(av["timestamp"], "\n")
+                    try:
+                        print(f'{av["vendor"]}: {av["signature"]}')
+                        print(av["md5"])
+                        print(av["timestamp"], "\n")
+                    except KeyError:
+                        continue
         else:
-            print(f"{Fore.GREEN}[x]{Fore.RESET} {ss_txt}: Hash not found")
+            print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
 
 
 def malbazaar(hash_str):
     url = "https://mb-api.abuse.ch/api/v1/"
-    malb_txt = f"{Style.BRIGHT}MalBazaar{Style.RESET_ALL}"
+    title = f"{Style.BRIGHT}MalBazaar{Style.RESET_ALL}"
     data = {"query": "get_info", "hash": hash_str}
     try:
         resp = requests.post(url, data=data, headers=headers).json()
@@ -53,9 +56,36 @@ def malbazaar(hash_str):
         print(e)
     else:
         if resp["query_status"] == "hash_not_found":
-            print(f"{Fore.GREEN}[x]{Fore.RESET} {malb_txt}: Hash not found")
+            print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
+        elif resp["query_status"] == "no_json":
+            print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {title}: Query Failed")
         else:
-            print(f"{Fore.RED}[+]{Fore.RESET} {malb_txt}: Hash found")
+            print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
+            if resp["data"]:
+                for v in resp["data"]:
+                    for k, v in v.items():
+                        if k == "vendor_intel":
+                            continue
+                        print(f"\t {k.title().replace('_', ' '):30}: {v}")
+
+
+def threatfox(hash_str):
+    url = "https://threatfox-api.abuse.ch/api/v1/"
+    title = f"{Style.BRIGHT}ThreatFox{Style.RESET_ALL}"
+    data = {"query": "search_hash", "hash": hash_str}
+    headers = CaseInsensitiveDict([("Accept", "application/json")])
+
+    try:
+        resp = requests.post(url, headers=headers, json=data).json()
+    except Exception as e:
+        print(e)
+    else:
+        if resp["query_status"] == "hash_not_found":
+            print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
+        elif resp["query_status"] != "ok":
+            print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {title}: {resp['data']}")
+        else:
+            print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
             if resp["data"]:
                 for v in resp["data"]:
                     for k, v in v.items():
@@ -64,7 +94,7 @@ def malbazaar(hash_str):
 
 def malshare(hash_str):
     url = "https://malshare.com/daily/malshare.current.all.txt"
-    mals_txt = f"{Style.BRIGHT}Malshare{Style.RESET_ALL}"
+    title = f"{Style.BRIGHT}Malshare{Style.RESET_ALL}"
     try:
         resp = requests.get(url, headers=headers)
     except Exception as e:
@@ -73,31 +103,31 @@ def malshare(hash_str):
         if resp.status_code == 200:
             match = re.findall(hash_str, resp.text)
             if match:
-                print(f"{Fore.RED}[+]{Fore.RESET} {mals_txt}: Hash found")
+                print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
             else:
-                print(f"{Fore.GREEN}[x]{Fore.RESET} {mals_txt}: Hash not found")
+                print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
 
 
 def mhr(hash_str):
     resolver = dns.resolver.Resolver()
     resolver.timeout = 1
     resolver.lifetime = 1
-    mhr_txt = f"{Style.BRIGHT}Cymru{Style.RESET_ALL}"
+    title = f"{Style.BRIGHT}Cymru{Style.RESET_ALL}"
     try:
         for rdata in resolver.resolve(f"{hash_str}.malware.hash.cymru.com", "TXT"):
             unix_time = rdata.to_text().replace('"', "").split()[0]
             detection = rdata.to_text().replace('"', "").split()[1]
             last_seen = datetime.datetime.fromtimestamp(int(unix_time)).strftime("%Y-%m-%d %H:%M:%S")
             if last_seen:
-                print(f"{Fore.RED}[+]{Fore.RESET} {mhr_txt}: Hash found")
+                print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
                 print(f"\t{'Last Seen':10}: {last_seen}")
                 print(f"\t{'Detection by A/V':10}: {detection}%")
     except dns.exception.Timeout:
         print("Timeout error")
     except dns.name.LabelTooLong:
-        print(f"{Fore.YELLOW}[-]{Fore.RESET} {mhr_txt}: Use MD5 hash")
-    except dns.resolver.NXDOMAIN:
-        print(f"{Fore.GREEN}[x]{Fore.RESET} {mhr_txt}: Hash not found")
+        print(f"\n{Fore.YELLOW}[-]{Fore.RESET} {title}: Use MD5 hash")
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+        print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
 
 
 def main():
@@ -106,9 +136,10 @@ def main():
     else:
         sys.exit("Usage: python malhash_chk.py <hash>")
 
-    print(f"{Fore.YELLOW}Querying...{Fore.RESET}")
+    print(f"{Fore.LIGHTMAGENTA_EX}Querying...{Fore.RESET}")
     shadow_srv(hash_str)
     malbazaar(hash_str)
+    threatfox(hash_str)
     malshare(hash_str)
     mhr(hash_str)
 
