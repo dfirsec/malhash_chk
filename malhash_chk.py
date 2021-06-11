@@ -62,8 +62,8 @@ def malbazaar(hash_str):
         else:
             print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
             if resp["data"]:
-                for v in resp["data"]:
-                    for k, v in v.items():
+                for data in resp["data"]:
+                    for k, v in data.items():
                         if k == "vendor_intel":
                             continue
                         print(f"\t {k.title().replace('_', ' '):30}: {v}")
@@ -87,8 +87,8 @@ def threatfox(hash_str):
         else:
             print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
             if resp["data"]:
-                for v in resp["data"]:
-                    for k, v in v.items():
+                for data in resp["data"]:
+                    for k, v in data.items():
                         print(f"\t {k.title().replace('_', ' '):30}: {v}")
 
 
