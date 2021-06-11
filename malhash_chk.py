@@ -136,7 +136,7 @@ def main():
     else:
         sys.exit("Usage: python malhash_chk.py <hash>")
 
-    print(f"{Fore.LIGHTMAGENTA_EX}Querying...{Fore.RESET}")
+    print(f"{Fore.MAGENTA}Querying...{Fore.RESET}")
     shadow_srv(hash_str)
     malbazaar(hash_str)
     threatfox(hash_str)
