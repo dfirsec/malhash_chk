@@ -23,7 +23,7 @@ def shadow_srv(hash_str):
     title = f"{Style.BRIGHT}ShadowServer{Style.RESET_ALL}"
     try:
         resp = requests.get(url, headers=ua).json()
-    except Exception as e:
+    except ConnectionError as e:
         print(e)
     else:
         if resp:
@@ -52,7 +52,7 @@ def malbazaar(hash_str):
     data = {"query": "get_info", "hash": hash_str}
     try:
         resp = requests.post(url, data=data, headers=ua).json()
-    except Exception as e:
+    except ConnectionError as e:
         print(e)
     else:
         if resp["query_status"] == "hash_not_found":
@@ -77,7 +77,7 @@ def threatfox(hash_str):
 
     try:
         resp = requests.post(url, headers=headers, json=data).json()
-    except Exception as e:
+    except ConnectionError as e:
         print(e)
     else:
         if resp["query_status"] == "hash_not_found":
@@ -97,7 +97,7 @@ def malshare(hash_str):
     title = f"{Style.BRIGHT}Malshare{Style.RESET_ALL}"
     try:
         resp = requests.get(url, headers=ua)
-    except Exception as e:
+    except ConnectionError as e:
         print(e)
     else:
         if resp.status_code == 200:
