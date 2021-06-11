@@ -15,14 +15,14 @@ __description__ = "Query hash against malware hash repos."
 init()
 
 
-headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"}
+ua = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"}
 
 
 def shadow_srv(hash_str):
     url = f"https://api.shadowserver.org/malware/info?sample={hash_str}"
     title = f"{Style.BRIGHT}ShadowServer{Style.RESET_ALL}"
     try:
-        resp = requests.get(url, headers=headers).json()
+        resp = requests.get(url, headers=ua).json()
     except Exception as e:
         print(e)
     else:
@@ -51,7 +51,7 @@ def malbazaar(hash_str):
     title = f"{Style.BRIGHT}MalBazaar{Style.RESET_ALL}"
     data = {"query": "get_info", "hash": hash_str}
     try:
-        resp = requests.post(url, data=data, headers=headers).json()
+        resp = requests.post(url, data=data, headers=ua).json()
     except Exception as e:
         print(e)
     else:
@@ -96,7 +96,7 @@ def malshare(hash_str):
     url = "https://malshare.com/daily/malshare.current.all.txt"
     title = f"{Style.BRIGHT}Malshare{Style.RESET_ALL}"
     try:
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=ua)
     except Exception as e:
         print(e)
     else:
