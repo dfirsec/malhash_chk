@@ -15,7 +15,9 @@ __description__ = "Query hash against malware hash repos."
 init()
 
 
-ua = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"}
+ua = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"
+}
 
 
 def shadow_srv(hash_str):
@@ -117,7 +119,9 @@ def mhr(hash_str):
         for rdata in resolver.resolve(f"{hash_str}.malware.hash.cymru.com", "TXT"):
             unix_time = rdata.to_text().replace('"', "").split()[0]
             detection = rdata.to_text().replace('"', "").split()[1]
-            last_seen = datetime.datetime.fromtimestamp(int(unix_time)).strftime("%Y-%m-%d %H:%M:%S")
+            last_seen = datetime.datetime.fromtimestamp(int(unix_time)).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
             if last_seen:
                 print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
                 print(f"\t{'Last Seen':10}: {last_seen}")
