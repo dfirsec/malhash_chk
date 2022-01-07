@@ -8,12 +8,11 @@ from colorama import Fore, Style, init
 from requests.structures import CaseInsensitiveDict
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.0.3"
+__version__ = "v0.0.4"
 __description__ = "Query hash against malware hash repos."
 
 # Intialize colorama
 init()
-
 
 ua = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"}
 
@@ -23,8 +22,8 @@ def shadow_srv(hash_str):
     title = f"{Style.BRIGHT}ShadowServer{Style.RESET_ALL}"
     try:
         resp = requests.get(url, headers=ua).json()
-    except ConnectionError as e:
-        print(e)
+    except ConnectionError as err:
+        print(err)
     else:
         if resp:
             print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
@@ -56,7 +55,7 @@ def malbazaar(hash_str):
         print(e)
     else:
         if resp["query_status"] == "hash_not_found":
-            print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
+            print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
         elif resp["query_status"] == "no_json":
             print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {title}: Query Failed")
         else:
@@ -81,7 +80,7 @@ def threatfox(hash_str):
         print(e)
     else:
         if resp["query_status"] == "hash_not_found":
-            print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
+            print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
         elif resp["query_status"] != "ok":
             print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {title}: {resp['data']}")
         else:
@@ -105,7 +104,7 @@ def malshare(hash_str):
             if match:
                 print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
             else:
-                print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
+                print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
 
 
 def mhr(hash_str):
@@ -114,7 +113,7 @@ def mhr(hash_str):
     resolver.lifetime = 1
     title = f"{Style.BRIGHT}Cymru{Style.RESET_ALL}"
     try:
-        for rdata in resolver.resolve(f"{hash_str}.malware.hash.cymru.com", "TXT"):
+        for rdata in resolver.resolve(f"{hash_str}.hash.cymru.com", "TXT"):
             unix_time = rdata.to_text().replace('"', "").split()[0]
             detection = rdata.to_text().replace('"', "").split()[1]
             last_seen = datetime.datetime.fromtimestamp(int(unix_time)).strftime("%Y-%m-%d %H:%M:%S")
@@ -125,9 +124,9 @@ def mhr(hash_str):
     except dns.exception.Timeout:
         print("Timeout error")
     except dns.name.LabelTooLong:
-        print(f"\n{Fore.YELLOW}[-]{Fore.RESET} {title}: Use MD5 hash")
+        print(f"\n{Fore.YELLOW}[*]{Fore.RESET} {title}: Use MD5 hash")
     except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-        print(f"\n{Fore.GREEN}[x]{Fore.RESET} {title}: Hash not found")
+        print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
 
 
 def main():
