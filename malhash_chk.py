@@ -34,11 +34,11 @@ def shadow_srv(hash_str):
                     print(f"\t{'First Seen':10} : {data['first_seen']}")
                     print(f"\t{'Last Seen':10} : {data['last_seen']}")
                     print(f"\t{'Type':10} : {data['type']}")
-                for av in data["anti_virus"]:
+                for av_results in data["anti_virus"]:
                     try:
-                        print(f'{av["vendor"]}: {av["signature"]}')
-                        print(av["md5"])
-                        print(av["timestamp"], "\n")
+                        print(f'{av_results["vendor"]}: {av_results["signature"]}')
+                        print(av_results["md5"])
+                        print(av_results["timestamp"], "\n")
                     except KeyError:
                         continue
         else:
@@ -51,8 +51,8 @@ def malbazaar(hash_str):
     data = {"query": "get_info", "hash": hash_str}
     try:
         resp = requests.post(url, data=data, headers=ua).json()
-    except ConnectionError as e:
-        print(e)
+    except ConnectionError as err:
+        print(err)
     else:
         if resp["query_status"] == "hash_not_found":
             print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
@@ -76,8 +76,8 @@ def threatfox(hash_str):
 
     try:
         resp = requests.post(url, headers=headers, json=data).json()
-    except ConnectionError as e:
-        print(e)
+    except ConnectionError as err:
+        print(err)
     else:
         if resp["query_status"] == "hash_not_found":
             print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
@@ -96,12 +96,11 @@ def malshare(hash_str):
     title = f"{Style.BRIGHT}Malshare{Style.RESET_ALL}"
     try:
         resp = requests.get(url, headers=ua)
-    except ConnectionError as e:
-        print(e)
+    except ConnectionError as err:
+        print(err)
     else:
         if resp.status_code == 200:
-            match = re.findall(hash_str, resp.text)
-            if match:
+            if match := re.findall(hash_str, resp.text):
                 print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
             else:
                 print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
@@ -116,8 +115,7 @@ def mhr(hash_str):
         for rdata in resolver.resolve(f"{hash_str}.hash.cymru.com", "TXT"):
             unix_time = rdata.to_text().replace('"', "").split()[0]
             detection = rdata.to_text().replace('"', "").split()[1]
-            last_seen = datetime.datetime.fromtimestamp(int(unix_time)).strftime("%Y-%m-%d %H:%M:%S")
-            if last_seen:
+            if last_seen := datetime.datetime.fromtimestamp(int(unix_time)).strftime("%Y-%m-%d %H:%M:%S"):
                 print(f"\n{Fore.RED}[+]{Fore.RESET} {title}: Hash found")
                 print(f"\t{'Last Seen':10}: {last_seen}")
                 print(f"\t{'Detection by A/V':10}: {detection}%")
@@ -144,7 +142,7 @@ def main():
 
 
 if __name__ == "__main__":
-    banner = fr"""
+    banner = rf"""
         __  ___      ____  __           __       ________              __
        /  |/  /___ _/ / / / /___ ______/ /_     / ____/ /_  ___  _____/ /__
       / /|_/ / __ `/ / /_/ / __ `/ ___/ __ \   / /   / __ \/ _ \/ ___/ //_/
