@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 import sys
 
@@ -79,7 +80,7 @@ def threatfox(hash_str):
     except ConnectionError as err:
         print(err)
     else:
-        if resp["query_status"] == "hash_not_found":
+        if resp["query_status"] in ("hash_not_found", "no_result"):
             print(f"\n{Fore.GREEN}[-]{Fore.RESET} {title}: Hash not found")
         elif resp["query_status"] != "ok":
             print(f"\n{Fore.YELLOW}[!]{Fore.RESET} {title}: {resp['data']}")
@@ -131,7 +132,7 @@ def main():
     if len(sys.argv) > 1:
         hash_str = sys.argv[1]
     else:
-        sys.exit("Usage: python malhash_chk.py <hash>")
+        sys.exit(f"Usage: python {os.path.basename(__file__)} <HASH>")
 
     print(f"{Fore.MAGENTA}Querying...{Fore.RESET}")
     shadow_srv(hash_str)
